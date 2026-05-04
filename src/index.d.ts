@@ -7,3 +7,5 @@ export declare const NAVIGATION_MODE: {
 };
 
 export declare function getAndroidNavigationMode(): AndroidNavigationMode;
+
+export declare function useAndroidNavigationMode(): AndroidNavigationMode;

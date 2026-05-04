@@ -1,6 +1,6 @@
 {
   "name": "react-native-android-navigation-mode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React Native Android module to detect navigation mode: gesture, 2-button, or 3-button.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -8,8 +8,12 @@
     "android",
     "src",
     "README.md",
-    "react-native.config.js"
+    "react-native.config.js",
+    "app.plugin.js"
   ],
+  "expo": {
+    "plugin": "./app.plugin.js"
+  },
   "scripts": {
     "test": "echo \"No tests yet\""
   },
@@ -18,7 +22,9 @@
     "android",
     "navigation-bar",
     "gesture",
-    "native-module"
+    "native-module",
+    "expo",
+    "expo-plugin"
   ],
   "author": "minhla",
   "license": "MIT",

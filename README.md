@@ -26,7 +26,29 @@ If your project includes iOS, run:
 npx pod-install
 ```
 
+## Expo
+
+This package includes **custom native Android code**. It does **not** run inside **Expo Go**. Use a [development build](https://docs.expo.dev/develop/development-builds/introduction/) or a production build from EAS (`expo prebuild` / EAS Build).
+
+1. Install the package (same as above).
+
+2. Register the config plugin in `app.json` or `app.config.js`:
+
+```json
+{
+  "expo": {
+    "plugins": ["react-native-android-navigation-mode"]
+  }
+}
+```
+
+3. Rebuild native Android (e.g. `npx expo prebuild --clean` then run the dev client, or trigger a new EAS Android build).
+
+Autolinking still applies; the plugin entry is the supported way to declare the dependency in Expo-managed projects and leaves room for future native tweaks if needed.
+
 ## Quick usage
+
+### Function API
 
 ```ts
 import {
@@ -41,39 +63,23 @@ if (mode === NAVIGATION_MODE.GESTURE) {
 }
 ```
 
-## Full example (React Native component)
+### Hook API
 
 ```tsx
-import React from "react";
-import { Platform, Text, View } from "react-native";
-import {
-  getAndroidNavigationMode,
-  NAVIGATION_MODE,
-} from "react-native-android-navigation-mode";
+import { useAndroidNavigationMode, NAVIGATION_MODE } from "react-native-android-navigation-mode";
 
-export default function NavigationModeExample() {
-  const mode = getAndroidNavigationMode();
+function Screen() {
+  const mode = useAndroidNavigationMode();
 
-  const message =
-    mode === NAVIGATION_MODE.GESTURE
-      ? "Gesture navigation is enabled"
-      : mode === NAVIGATION_MODE.TWO_BUTTON
-        ? "2-button navigation is enabled"
-        : "3-button navigation is enabled";
+  if (mode === NAVIGATION_MODE.GESTURE) {
+    // ...
+  }
 
-  return (
-    <View style={{ padding: 16 }}>
-      <Text style={{ fontWeight: "600", marginBottom: 8 }}>
-        Navigation Mode
-      </Text>
-      <Text>{message}</Text>
-      <Text style={{ marginTop: 8, opacity: 0.7 }}>
-        Platform: {Platform.OS} | Raw value: {mode}
-      </Text>
-    </View>
-  );
+  return null;
 }
 ```
+
+The hook re-reads the mode when the app becomes **active** again (e.g. user changed navigation style in system settings and came back to your app).
 
 ## API
 
@@ -92,14 +98,14 @@ Constants for stable comparisons:
 - `NAVIGATION_MODE.TWO_BUTTON`
 - `NAVIGATION_MODE.THREE_BUTTON`
 
+### `useAndroidNavigationMode(): 'gesture' | '2-button' | '3-button'`
+
+Same values as `getAndroidNavigationMode`, as React state. On Android, updates again when `AppState` becomes `active` so changes made in system settings are reflected after the user returns to the app.
+
+On non-Android platforms, always returns `'gesture'`.
+
 ## Platform behavior
 
 - Android: reads system config `config_navBarInteractionMode`
 - Some OEM devices: uses fallback secure setting `navigation_mode`
 - iOS / other platforms: fallback to `'gesture'`
-
-## Best practices
-
-- Read mode at app start and when app returns to foreground if needed
-- Use constants from `NAVIGATION_MODE` instead of hardcoded strings
-- Treat the value as runtime-dependent (user can change system settings)
