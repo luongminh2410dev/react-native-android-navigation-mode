@@ -16,3 +16,6 @@ coverage/
 android/build/
 android/.gradle/
 android/.cxx/
+
+# Local agent plans (not published)
+docs/superpowers/
