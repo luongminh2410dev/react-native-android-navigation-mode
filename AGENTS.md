@@ -1,6 +1,6 @@
 # Agent Instructions — react-native-android-navigation-mode
 
-Published npm library: a Kotlin React Native native module that detects the Android navigation mode (`gesture`, `2-button`, `3-button`), with a JS function, a hook, hand-written types, and a no-op Expo config plugin. No iOS native code, no example app, no installed dev dependencies or tests.
+Published npm library: a Kotlin React Native native module that detects the Android navigation mode (`gesture`, `2-button`, `3-button`), with legacy and detailed (`unknown` + `source`) JS getters and hooks, hand-written types, and a no-op Expo config plugin. No iOS native code and no example app yet. Jest, ESLint, and TypeScript consumer checks are installed as devDependencies; Kotlin detector unit tests exist but need a host app to run.
 
 ## Shared project skills
 
@@ -19,6 +19,8 @@ These skills adapt jupi-app guidance. App-only rules (Redux-Saga, networking, de
 ## Working conventions
 
 - Follow the existing structure: plain JS in `src/index.js` shipped untranspiled, types in `src/index.d.ts`, Kotlin in `android/src/main/java/com/reactnativeandroidnavigationmode/`. Read the implementation before assuming behavior.
+- Tests: JS tests in `__tests__/` (mocked `react-native`, no RN install), consumer type checks in `type-tests/`, Kotlin detector tests in `android/src/test/`. Detection logic lives in `NavigationModeDetector.kt` without Android APIs; system reads live in `SystemNavigationModeReader.kt`.
+- `.npmrc` sets `legacy-peer-deps=true` so `npm install` does not pull `react-native` as a peer dependency.
 - Keep mode strings, the native module name, and the Kotlin package name consistent across Kotlin, JS, types, Gradle, and `react-native.config.js`.
 - Every public export has a type declaration and a README entry. Keep JSDoc, types, and README aligned with behavior in the same task. State what was actually checked rather than marking written code as verified.
 - Treat the public API as shared with unknown consumers. Before changing existing behavior, follow `public-api-change-safety`; present semver impact and ask when consumer-visible behavior changes or remains uncertain. Prior approval for that same impact remains valid.
@@ -29,7 +31,7 @@ These skills adapt jupi-app guidance. App-only rules (Redux-Saga, networking, de
 
 ## Execution authorization
 
-Checks that need no install may run freely: `node --check` on JS files, `npm pack --dry-run --ignore-scripts`, `git diff --check`. Installed `package.json` scripts for tests, lint, and types may run when they do not build or launch an app.
+Checks that need no install may run freely: `node --check` on JS files, `npm pack --dry-run --ignore-scripts`, `git diff --check`, and the installed scripts `npm test -- --runInBand`, `npm run lint`, `npm run typecheck` (none of them build or launch an app).
 
 Do not install dependencies, download tools via `npx`, compile Kotlin or run Kotlin/Gradle tests, create or run a host/example app, start Metro, or build/install on a device solely to verify an edit. These need user authorization; reuse authorization already given in the session. For device verification, ask which host app, platform, and Android version/OEM to use. Stop background processes you started when done unless the user asked to keep them running; report any remaining process.
 

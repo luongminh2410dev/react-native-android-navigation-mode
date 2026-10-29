@@ -10,8 +10,9 @@ Adapted from the jupi-app `shared-layer-change-safety` skill. In a published lib
 ## Public surface
 
 - JS exports in `src/index.js` and their declarations in `src/index.d.ts`.
-- Returned values and fallbacks: non-Android `gesture`, unknown native value `3-button`, missing module throws.
-- Hook behavior: initial value, `AppState` refresh, cleanup.
+- Returned values and fallbacks: legacy non-Android `gesture`, legacy undetermined/unknown value `3-button`, missing module throws; detailed API `mode`/`interactionMode`/`source` values, `unknown` + `unavailable`/`unsupported`, rebuild error for an outdated binary.
+- Native detection order and its per-SDK results (resource, `navigation_mode`, Android 9 swipe-up, `sdk-default`); changing them changes what both APIs return.
+- Hook behavior: initial value, `AppState` refresh, cleanup; detailed hook error/recovery contract.
 - Native module name `AndroidNavigationMode`, Kotlin package/class names used by `react-native.config.js`.
 - `package.json`: `name`, `main`, `types`, `files`, `expo.plugin`, `peerDependencies`.
 - `android/build.gradle` defaults: `compileSdkVersion`, `minSdkVersion`, Java/Kotlin targets.
