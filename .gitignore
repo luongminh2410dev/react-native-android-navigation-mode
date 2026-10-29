@@ -10,12 +10,3 @@ node_modules/
 
 # Claude Code local settings
 .claude/settings.local.json
-
-# Build and test output
-coverage/
-android/build/
-android/.gradle/
-android/.cxx/
-
-# Local agent plans (not published)
-docs/superpowers/
