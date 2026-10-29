@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": [],
+    "paths": {
+      "react-native-android-navigation-mode": ["./src/index.d.ts"]
+    }
+  },
+  "include": ["src/index.d.ts", "type-tests/**/*.ts"]
+}

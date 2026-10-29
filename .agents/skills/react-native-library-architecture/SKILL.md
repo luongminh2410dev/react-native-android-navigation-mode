@@ -15,19 +15,22 @@ The layer map below is the current structure. When an authorized change adds lay
 
 | Layer | Source | Responsibility |
 | --- | --- | --- |
-| Native module | `android/src/main/java/com/reactnativeandroidnavigationmode/AndroidNavigationModeModule.kt` | Reads `config_navBarInteractionMode`, falls back to `Settings.Secure` `navigation_mode`, returns a mode string. |
+| Native module | `android/src/main/java/com/reactnativeandroidnavigationmode/AndroidNavigationModeModule.kt` | Bridge methods `getNavigationMode()` (legacy string) and `getNavigationModeInfo()` (map with `mode`, `interactionMode`, `source`), both synchronous. |
+| Detector | `.../NavigationModeDetector.kt` | Decision logic and mode/source constants, free of Android APIs: resource → `navigation_mode` → Android 9 swipe-up setting → `sdk-default` below Android 10, `unknown` on Android 10+. |
+| System reader | `.../SystemNavigationModeReader.kt` | Reads the resource and secure settings; each read returns `null` when missing or rejected. |
 | Native package | `.../AndroidNavigationModePackage.kt` | Registers the module; no view managers. |
 | Gradle | `android/build.gradle` | `namespace`, SDK/Java/Kotlin targets via `safeExtGet` defaults from the host app. |
 | Autolinking | `react-native.config.js` | `packageImportPath` / `packageInstance` for the package class. |
-| JS API | `src/index.js` | `NAVIGATION_MODE`, `getAndroidNavigationMode()`, `useAndroidNavigationMode()`; shipped untranspiled. |
+| JS API | `src/index.js` | `NAVIGATION_MODE`, `getAndroidNavigationMode()`, `useAndroidNavigationMode()`, `getAndroidNavigationModeInfo()`, `useAndroidNavigationModeInfo()`; shipped untranspiled. |
 | Types | `src/index.d.ts` | Hand-written declarations for every JS export. |
 | Expo | `app.plugin.js`, `package.json` `expo.plugin` | No-op config plugin; native code is autolinked. Not usable in Expo Go. |
 | Publish | `package.json` `files`, `main`, `types`, `peerDependencies` | What npm ships and the supported React / React Native range. |
-| Docs | `README.md` | Public API, platform behavior, Expo setup. |
+| Docs | `README.md`, `CHANGELOG.md` | Public API, platform behavior, Expo setup; release notes. |
+| Tests and tooling | `__tests__/`, `type-tests/`, `android/src/test/`, `babel.config.js` (Jest only), `eslint.config.js`, `tsconfig.json`, `.npmrc` | Jest with mocked `react-native`, ESLint, consumer type checks, Kotlin detector tests; none ship in the tarball. |
 
 ## Contracts kept in sync
 
-- Mode strings `gesture`, `2-button`, `3-button` exist in the Kotlin companion object, `NAVIGATION_MODE` in `src/index.js`, and `src/index.d.ts`. Change all three together.
+- Mode strings `gesture`, `2-button`, `3-button`, `unknown` and the `source` values exist in the `NavigationModeDetector` companion object, `src/index.js`, `src/index.d.ts`, and README. Change them together.
 - Native module name `AndroidNavigationMode` (`getName()`) must match `NativeModules.AndroidNavigationMode`.
 - Kotlin package `com.reactnativeandroidnavigationmode`, Gradle `namespace`, `AndroidManifest.xml`, and `react-native.config.js` import path must agree.
 - Every JS export has a declaration in `src/index.d.ts` and a README entry.
@@ -35,10 +38,10 @@ The layer map below is the current structure. When an authorized change adds lay
 
 ## JS behavior rules
 
-- Non-Android platforms return `NAVIGATION_MODE.GESTURE` without touching `NativeModules`.
-- Missing or unlinked native module throws `LINKING_ERROR`; unknown native values map to `THREE_BUTTON`. Do not silently change these fallbacks.
-- `getNavigationMode` is a blocking synchronous bridge method. Keep native work cheap; adding async variants is a public API decision.
-- The hook re-reads on `AppState` `active` and removes its subscription on unmount. Keep effect cleanup and avoid extra renders or listeners.
+- Non-Android platforms never touch `NativeModules`: the legacy API returns `NAVIGATION_MODE.GESTURE`, the detailed API returns `unknown` with `source: 'unsupported'`.
+- Missing or unlinked native module throws `LINKING_ERROR`; unknown native values map to `THREE_BUTTON` in the legacy API. The detailed getter also throws a rebuild error when the binary lacks `getNavigationModeInfo`. Do not silently change these fallbacks.
+- `getNavigationMode` and `getNavigationModeInfo` are blocking synchronous bridge methods sharing one detector. Keep native work cheap; adding async variants is a public API decision.
+- Hooks re-read on `AppState` `active` and remove their subscription on unmount. The detailed hook also re-reads after subscribing, skips state updates when the info is unchanged, and returns getter errors instead of throwing. Keep effect cleanup and avoid extra renders or listeners.
 - Keep `src/index.js` free of syntax that a host Metro/Babel setup for the supported React Native range cannot handle.
 
 ## Native rules
@@ -54,4 +57,4 @@ Before adding a helper, constant, or file, check `src/index.js`, the Kotlin comp
 
 ## Verification
 
-Run the relevant `package.json` scripts when present and installed, plus the no-install checks listed in `post-task-finishing-pass`. Installing dependencies, compiling Kotlin, or running in a host/example app requires user authorization per `AGENTS.md`. Report what was actually run; native behavior is unverified until it runs on a device.
+Run `npm test -- --runInBand`, `npm run lint`, and `npm run typecheck`, plus the no-install checks listed in `post-task-finishing-pass`. Installing dependencies, compiling Kotlin, or running in a host/example app requires user authorization per `AGENTS.md`. Report what was actually run; native behavior is unverified until it runs on a device.
