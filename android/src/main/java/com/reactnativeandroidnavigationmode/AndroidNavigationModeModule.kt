@@ -1,42 +1,89 @@
 package com.reactnativeandroidnavigationmode
 
-import android.provider.Settings
+import android.os.Build
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.bridge.WritableMap
+import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class AndroidNavigationModeModule(reactContext: ReactApplicationContext) :
-    ReactContextBaseJavaModule(reactContext) {
+    AndroidNavigationModeSpec(reactContext) {
 
   companion object {
-    private const val MODE_GESTURE = "gesture"
-    private const val MODE_TWO_BUTTON = "2-button"
-    private const val MODE_THREE_BUTTON = "3-button"
+    const val NAME = "AndroidNavigationMode"
+    const val INSETS_EVENT = "androidNavigationBarInsetsDidChange"
   }
 
-  override fun getName(): String = "AndroidNavigationMode"
+  private val detector by lazy {
+    NavigationModeDetector(SystemNavigationModeReader(reactApplicationContext), Build.VERSION.SDK_INT)
+  }
+
+  private val insetsObserver by lazy {
+    NavigationBarInsetsObserver(reactApplicationContext) { insets -> emitInsets(insets) }
+  }
+
+  override fun getName(): String = NAME
 
   @ReactMethod(isBlockingSynchronousMethod = true)
-  fun getNavigationMode(): String {
-    val resources = reactApplicationContext.resources
-    val resourceId = resources.getIdentifier("config_navBarInteractionMode", "integer", "android")
+  override fun getNavigationMode(): String = detector.detect().legacyMode
 
-    if (resourceId > 0) {
-      return when (resources.getInteger(resourceId)) {
-        2 -> MODE_GESTURE
-        1 -> MODE_TWO_BUTTON
-        else -> MODE_THREE_BUTTON
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  override fun getNavigationModeInfo(): WritableMap {
+    val info = detector.detect()
+    return Arguments.createMap().apply {
+      putString("mode", info.mode)
+      val interactionMode = info.interactionMode
+      if (interactionMode == null) {
+        putNull("interactionMode")
+      } else {
+        putInt("interactionMode", interactionMode)
       }
-    }
-
-    return try {
-      when (Settings.Secure.getInt(reactApplicationContext.contentResolver, "navigation_mode")) {
-        2 -> MODE_GESTURE
-        1 -> MODE_TWO_BUTTON
-        else -> MODE_THREE_BUTTON
-      }
-    } catch (_: Exception) {
-      MODE_THREE_BUTTON
+      putString("source", info.source)
     }
   }
+
+  @ReactMethod
+  override fun getNavigationBarInsets(promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      val decorView = reactApplicationContext.currentActivity?.window?.decorView
+      promise.resolve(NavigationBarInsets.read(decorView)?.toWritableMap())
+    }
+  }
+
+  @ReactMethod
+  override fun addListener(eventName: String) {
+    if (eventName == INSETS_EVENT) {
+      insetsObserver.addSubscriber()
+    }
+  }
+
+  @ReactMethod
+  override fun removeListeners(count: Double) {
+    insetsObserver.removeSubscribers(count.toInt())
+  }
+
+  override fun invalidate() {
+    insetsObserver.release()
+    super.invalidate()
+  }
+
+  private fun emitInsets(insets: NavigationBarInsets?) {
+    if (!reactApplicationContext.hasActiveReactInstance()) {
+      return
+    }
+    reactApplicationContext
+      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+      .emit(INSETS_EVENT, insets?.toWritableMap())
+  }
+
+  private fun NavigationBarInsets.toWritableMap(): WritableMap =
+    Arguments.createMap().apply {
+      putDouble("top", top)
+      putDouble("right", right)
+      putDouble("bottom", bottom)
+      putDouble("left", left)
+    }
 }
