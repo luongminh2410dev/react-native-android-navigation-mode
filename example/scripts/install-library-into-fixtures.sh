@@ -22,5 +22,7 @@ for fixture in "$@"; do
   # npm skips copying a local package whose version did not change, so remove the previous copies first.
   rm -rf "$fixture/node_modules/react-native-android-navigation-mode" "$fixture/node_modules/navigation-mode-example-shared"
   # install-links copies local packages instead of symlinking them, which older Metro versions cannot follow.
-  (cd "$fixture" && npm install --install-links "file:../.tarballs/react-native-android-navigation-mode.tgz" "file:../shared")
+  # --no-save keeps the lockfile unchanged: the fixture's package.json already lists both packages (autolinking reads it),
+  # and the tarball integrity changes on every pack.
+  (cd "$fixture" && npm install --no-save --install-links "file:../.tarballs/react-native-android-navigation-mode.tgz" "file:../shared")
 done

@@ -10,7 +10,7 @@ The canonical skill directory is [`.agents/skills/`](.agents/skills/). `.claude/
 | --- | --- |
 | [react-native-library-architecture](.agents/skills/react-native-library-architecture/SKILL.md) | New features, native/JS/type changes, autolinking, Expo, and reuse checks. |
 | [public-api-change-safety](.agents/skills/public-api-change-safety/SKILL.md) | Changes to existing exports, return values, fallbacks, native names, `package.json`, SDK minimums, or published files. |
-| [docs-follow-code](.agents/skills/docs-follow-code/SKILL.md) | Behavior or contract changes described by JSDoc, `src/index.d.ts`, or README. |
+| [docs-follow-code](.agents/skills/docs-follow-code/SKILL.md) | Behavior or contract changes described by JSDoc, `src/index.d.ts`, README, or `docs/`. |
 | [post-task-finishing-pass](.agents/skills/post-task-finishing-pass/SKILL.md) | Only an explicit request to finish, clean up, or review the just-completed task. |
 | explore-codebase, review-changes, debug-issue, refactor-safely | Graph workflows for exploration, review, debugging, and refactoring. |
 
@@ -24,7 +24,7 @@ These skills adapt jupi-app guidance. App-only rules (Redux-Saga, networking, de
 - Example: committed fixtures `example/rn-0.71/` (minimum, Legacy), `example/rn-0.88/` (latest, New Architecture), and `example/expo-sdk-58/` share `example/shared/`. Other versions are generated on demand with `example/scripts/create-fixture.sh <version>` into git-ignored `example/generated-rn-<version>/`. `example/scripts/install-library-into-fixtures.sh` packs the library and installs the tarball; see `example/README.md`.
 - `.npmrc` sets `legacy-peer-deps=true` so `npm install` does not pull `react-native` as a peer dependency.
 - Keep mode strings, the native module name, and the Kotlin package name consistent across Kotlin, JS, types, Gradle, and `react-native.config.js`.
-- Every public export has a type declaration and a README entry. Keep JSDoc, types, and README aligned with behavior in the same task. State what was actually checked rather than marking written code as verified.
+- Every public export has a type declaration, a row in the README API table, and a section in `docs/api-reference.md`. README stays short (pitch, install, quick usage, API table, links); details live in `docs/`. Keep JSDoc, types, README, and `docs/` aligned with behavior in the same task. State what was actually checked rather than marking written code as verified.
 - Treat the public API as shared with unknown consumers. Before changing existing behavior, follow `public-api-change-safety`; present semver impact and ask when consumer-visible behavior changes or remains uncertain. Prior approval for that same impact remains valid.
 - Do not add runtime dependencies, dev tooling, iOS code, or new example fixtures without user approval. Keep the library small; search for an existing equivalent before adding a helper or constant.
 - Approved plans live in `docs/superpowers/plans/` (local only, git-ignored). A plan's decisions and execution limits are user approval for its tasks; read it before working on one. When a task changes structure, tooling, or scripts, update this file and the affected skills in the same task.

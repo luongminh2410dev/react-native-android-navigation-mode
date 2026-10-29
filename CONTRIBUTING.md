@@ -27,7 +27,7 @@ Kotlin tests and native builds run inside an example fixture, because `android/`
 
 ## Pull requests
 
-Keep the public API in `src/index.js`, `src/index.d.ts`, and `README.md` in sync, and add a line to `CHANGELOG.md` under `Unreleased`.
+Keep the public API in `src/index.js`, `src/index.d.ts`, the README API table, and `docs/api-reference.md` in sync, and add a line to `CHANGELOG.md` under `Unreleased`.
 
 ## Releasing
 

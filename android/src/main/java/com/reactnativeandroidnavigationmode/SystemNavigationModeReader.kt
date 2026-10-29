@@ -9,15 +9,19 @@ import android.provider.Settings
  */
 internal class SystemNavigationModeReader(private val context: Context) : NavigationModeReader {
 
+  // Looked up once: getIdentifier is slow, and the id stays fixed for the process (overlays change the value, not the id).
+  private val interactionModeResourceId: Int by lazy {
+    context.resources.getIdentifier("config_navBarInteractionMode", "integer", "android")
+  }
+
   override fun readInteractionModeResource(): Int? {
-    val resources = context.resources
-    val resourceId = resources.getIdentifier("config_navBarInteractionMode", "integer", "android")
+    val resourceId = interactionModeResourceId
     if (resourceId <= 0) {
       return null
     }
 
     return try {
-      resources.getInteger(resourceId)
+      context.resources.getInteger(resourceId)
     } catch (error: Exception) {
       null
     }

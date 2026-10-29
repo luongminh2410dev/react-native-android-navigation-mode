@@ -1,6 +1,6 @@
 ---
 name: docs-follow-code
-description: Use when an authorized change alters behavior, public API, platform support, configuration, or setup steps described by doc comments, type declarations, or README.
+description: Use when an authorized change alters behavior, public API, platform support, configuration, or setup steps described by doc comments, type declarations, README, or `docs/`.
 ---
 
 # Docs Follow Code
@@ -11,9 +11,10 @@ Update existing behavior descriptions in the same task, nearest to farthest:
 
 1. JSDoc in `src/index.js` and comments in Kotlin/`app.plugin.js` for the changed symbol: inputs, results, fallbacks, side effects.
 2. `src/index.d.ts`: types for every export and returned value.
-3. `README.md`: API section, quick usage, platform behavior, Expo and installation steps.
-4. `package.json` `description` / `keywords` when the scope of the library changes.
-5. `AGENTS.md` and the skills in `.agents/skills/` when structure, tooling, scripts, or verification commands change.
+3. `docs/`: `api-reference.md` (every export: signature, results, errors), `detection-and-platform-behavior.md`, `navigation-bar-insets-and-safe-area.md`, `compatibility-matrix.md`, `testing-with-jest.md`.
+4. `README.md`: short pitch, installation and Expo note, quick usage, API summary table, links to `docs/`. Keep details out of the README; add them to the matching `docs/` page.
+5. `package.json` `description` / `keywords` when the scope of the library changes.
+6. `AGENTS.md` and the skills in `.agents/skills/` when structure, tooling, scripts, or verification commands change.
 
 Find descriptions by symbol, mode string, setting name, and behavior terms with targeted `rg`. Documentation of the changed behavior is in scope even if outside the code diff. Private renames, formatting, and typos need no documentation sweep.
 

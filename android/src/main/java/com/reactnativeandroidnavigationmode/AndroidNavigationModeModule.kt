@@ -21,9 +21,8 @@ class AndroidNavigationModeModule(reactContext: ReactApplicationContext) :
     NavigationModeDetector(SystemNavigationModeReader(reactApplicationContext), Build.VERSION.SDK_INT)
   }
 
-  private val insetsObserver by lazy {
-    NavigationBarInsetsObserver(reactApplicationContext) { insets -> emitInsets(insets) }
-  }
+  // Created on the first insets subscription, so apps that never use insets never create it.
+  @Volatile private var insetsObserver: NavigationBarInsetsObserver? = null
 
   override fun getName(): String = NAME
 
@@ -56,17 +55,20 @@ class AndroidNavigationModeModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   override fun addListener(eventName: String) {
     if (eventName == INSETS_EVENT) {
-      insetsObserver.addSubscriber()
+      val observer = insetsObserver
+        ?: NavigationBarInsetsObserver(reactApplicationContext) { insets -> emitInsets(insets) }.also { insetsObserver = it }
+      observer.addSubscriber()
     }
   }
 
   @ReactMethod
   override fun removeListeners(count: Double) {
-    insetsObserver.removeSubscribers(count.toInt())
+    insetsObserver?.removeSubscribers(count.toInt())
   }
 
   override fun invalidate() {
-    insetsObserver.release()
+    insetsObserver?.release()
+    insetsObserver = null
     super.invalidate()
   }
 

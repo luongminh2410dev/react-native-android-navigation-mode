@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.1 — 2026-10-29
+
+### Changed
+
+- Detection looks up the `config_navBarInteractionMode` resource id once instead of on every read.
+- The navigation bar insets observer is created on the first insets subscription only.
+
+### Documentation
+
+- Shorter README; API reference, detection details, insets and safe-area guidance, compatibility matrix, and Jest setup moved to `docs/`.
+
 ## 1.1.0 — 2026-10-29
 
 ### Added

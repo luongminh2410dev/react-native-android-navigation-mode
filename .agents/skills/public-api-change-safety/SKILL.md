@@ -20,11 +20,11 @@ Adapted from the jupi-app `shared-layer-change-safety` skill. In a published lib
 - `android/build.gradle` defaults: `compileSdkVersion`, `minSdkVersion`, Java/Kotlin targets.
 - Expo plugin entry `app.plugin.js`.
 
-Pure additions (a new export, a new constant) need no separate approval but still need types, README, and a minor version bump at release.
+Pure additions (a new export, a new constant) need no separate approval but still need types, docs (README API table and `docs/api-reference.md`), and a minor version bump at release.
 
 ## For existing surface
 
-1. Use graph impact/caller queries first, then read the implementation. Supplement with targeted `rg` across JS, Kotlin, Gradle, `react-native.config.js`, `package.json`, and `README.md`; the graph does not model autolinking or string-based native lookup.
+1. Use graph impact/caller queries first, then read the implementation. Supplement with targeted `rg` across JS, Kotlin, Gradle, `react-native.config.js`, `package.json`, `README.md`, and `docs/`; the graph does not model autolinking or string-based native lookup.
 2. List what a consumer observes before and after: values, thrown errors, render count, timing (sync vs async), build requirements.
 3. "Optional parameter", "internal refactor", and "same type signature" are not compatibility evidence. Check defaults and fallback paths.
 4. If behavior is proven unchanged for consumers and the task authorizes the edit, proceed. Report evidence.

@@ -19,7 +19,7 @@ Preserve behavior and public API. Check repeated native calls, work on the JS th
 
 Remove unused task-created code, constants, debug logs (`console.log`, `Log.d`), completed TODOs, and redundant comments. Keep concise reasons for OEM fallbacks and workarounds. Follow surrounding formatting (2-space indent, single quotes in JS).
 
-Use `docs-follow-code` for JSDoc, `src/index.d.ts`, and README.
+Use `docs-follow-code` for JSDoc, `src/index.d.ts`, README, and `docs/`.
 
 ## 3. Self-test
 
@@ -37,6 +37,6 @@ Installing dependencies, downloading tools via `npx`, compiling Kotlin or runnin
 
 ## 4. Self-review and report
 
-Review requested behavior, fallbacks on every platform, linking errors, OEM settings variants, type/README drift, semver impact, and leftovers in the task diff. Fix in-scope findings; list unrelated findings without editing them. No version bump, publish, commit, push, or branch integration is implied.
+Review requested behavior, fallbacks on every platform, linking errors, OEM settings variants, type/README/`docs/` drift, semver impact, and leftovers in the task diff. Fix in-scope findings; list unrelated findings without editing them. No version bump, publish, commit, push, or branch integration is implied.
 
 Report scope, optimization, cleanup/docs, actual commands/results, findings fixed, public API impact, and unresolved/out-of-scope issues. Never report checks passing without execution evidence.
