@@ -27,7 +27,7 @@ These skills adapt jupi-app guidance. App-only rules (Redux-Saga, networking, de
 - Every public export has a type declaration and a README entry. Keep JSDoc, types, and README aligned with behavior in the same task. State what was actually checked rather than marking written code as verified.
 - Treat the public API as shared with unknown consumers. Before changing existing behavior, follow `public-api-change-safety`; present semver impact and ask when consumer-visible behavior changes or remains uncertain. Prior approval for that same impact remains valid.
 - Do not add runtime dependencies, dev tooling, iOS code, or new example fixtures without user approval. Keep the library small; search for an existing equivalent before adding a helper or constant.
-- Approved plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/). A plan's decisions and execution limits are user approval for its tasks; read it before working on one. When a task changes structure, tooling, or scripts, update this file and the affected skills in the same task.
+- Approved plans live in `docs/superpowers/plans/` (local only, git-ignored). A plan's decisions and execution limits are user approval for its tasks; read it before working on one. When a task changes structure, tooling, or scripts, update this file and the affected skills in the same task.
 - A finishing pass runs only when requested. Routine targeted verification is still required. Never claim checks passed without running them.
 - Preserve the user's preexisting changes. Commit, push, tag, version bump, and `npm publish` require user instruction.
 
