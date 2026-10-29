@@ -27,7 +27,30 @@ export function loadLibraryWithMockedReactNative({ os = 'android', nativeModule 
     }
   });
 
-  jest.doMock('react-native', () => ({ Platform: { OS: os }, NativeModules, AppState }), { virtual: true });
+  // Mirrors the legacy fallback of TurboModuleRegistry.get: no TurboModule proxy, so it returns NativeModules[name].
+  const TurboModuleRegistry = {
+    get: jest.fn((name) => NativeModules[name] ?? null)
+  };
+
+  let nativeEventHandlers = [];
+  const NativeEventEmitter = jest.fn(function NativeEventEmitter(nativeModuleArgument) {
+    this.nativeModule = nativeModuleArgument;
+    this.addListener = (eventType, handler) => {
+      const entry = { eventType, handler };
+      nativeEventHandlers.push(entry);
+      return {
+        remove: jest.fn(() => {
+          nativeEventHandlers = nativeEventHandlers.filter((registered) => registered !== entry);
+        })
+      };
+    };
+  });
+
+  jest.doMock(
+    'react-native',
+    () => ({ Platform: { OS: os }, NativeModules, AppState, TurboModuleRegistry, NativeEventEmitter }),
+    { virtual: true }
+  );
 
   const library = require('../../src/index');
   const React = require('react');
@@ -38,12 +61,22 @@ export function loadLibraryWithMockedReactNative({ os = 'android', nativeModule 
     React,
     TestRenderer,
     AppState,
+    TurboModuleRegistry,
     nativeModuleLookups,
     emitAppState(nextState) {
       appStateHandlers.slice().forEach((handler) => handler(nextState));
     },
     activeAppStateListenerCount() {
       return appStateHandlers.length;
+    },
+    NativeEventEmitter,
+    emitNativeEvent(eventType, payload) {
+      nativeEventHandlers
+        .filter((entry) => entry.eventType === eventType)
+        .forEach((entry) => entry.handler(payload));
+    },
+    activeNativeEventListenerCount() {
+      return nativeEventHandlers.length;
     }
   };
 }

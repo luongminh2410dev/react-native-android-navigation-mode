@@ -1,10 +1,14 @@
 // Consumer-side type checks for the published declarations. Run with `npm run typecheck`.
 import {
   NAVIGATION_MODE,
+  getAndroidNavigationBarHeight,
+  getAndroidNavigationBarInsets,
   getAndroidNavigationMode,
   getAndroidNavigationModeInfo,
+  useAndroidNavigationBarInsets,
   useAndroidNavigationMode,
   useAndroidNavigationModeInfo,
+  type AndroidNavigationBarInsets,
   type AndroidNavigationMode,
   type AndroidNavigationModeInfo
 } from 'react-native-android-navigation-mode';
@@ -46,7 +50,22 @@ const hookError: Error | null = hookResult.error;
 
 const appMode: AndroidNavigationMode = info.mode === 'unknown' ? NAVIGATION_MODE.THREE_BUTTON : info.mode;
 
+async function readNavigationBar(): Promise<number> {
+  const insets: AndroidNavigationBarInsets | null = await getAndroidNavigationBarInsets();
+  const height: number | null = await getAndroidNavigationBarHeight();
+  // @ts-expect-error Insets may be null before the window has insets.
+  const bottom: number = (await getAndroidNavigationBarInsets()).bottom;
+  return (insets?.bottom ?? 0) + (height ?? 0) + bottom;
+}
+
+const insetsHook = useAndroidNavigationBarInsets();
+const hookInsets: AndroidNavigationBarInsets | null = insetsHook.insets;
+const insetsError: Error | null = insetsHook.error;
+
 export {
+  readNavigationBar,
+  hookInsets,
+  insetsError,
   mode,
   hookMode,
   gesture,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AppState, NativeModules, Platform } from 'react-native';
+import { AppState, NativeEventEmitter, Platform } from 'react-native';
 
 const LINKING_ERROR =
   "The package 'react-native-android-navigation-mode' does not seem to be linked correctly.";
@@ -12,14 +12,22 @@ export const NAVIGATION_MODE = {
 
 const UNKNOWN_MODE = 'unknown';
 const VALID_INTERACTION_MODES = [0, 1, 2];
+const INSETS_EVENT = 'androidNavigationBarInsetsDidChange';
 
 function isNavigationMode(value) {
   return value === NAVIGATION_MODE.GESTURE || value === NAVIGATION_MODE.TWO_BUTTON || value === NAVIGATION_MODE.THREE_BUTTON;
 }
 
-/** Resolves the native module lazily so non-Android platforms never touch it. */
+/**
+ * Resolves the native module through the Codegen spec. Required lazily so non-Android platforms never load it.
+ * `TurboModuleRegistry.get` returns the TurboModule on the New Architecture and the bridge module on the legacy one.
+ */
+function getNativeModule() {
+  return require('./NativeAndroidNavigationMode').default;
+}
+
 function getNativeModuleWithMethod(methodName) {
-  const nativeModule = NativeModules.AndroidNavigationMode;
+  const nativeModule = getNativeModule();
   if (!nativeModule) {
     throw new Error(LINKING_ERROR);
   }
@@ -46,7 +54,7 @@ export function getAndroidNavigationMode() {
     return NAVIGATION_MODE.GESTURE;
   }
 
-  const nativeModule = NativeModules.AndroidNavigationMode;
+  const nativeModule = getNativeModule();
   if (!nativeModule || typeof nativeModule.getNavigationMode !== 'function') {
     throw new Error(LINKING_ERROR);
   }
@@ -115,11 +123,15 @@ export function useAndroidNavigationMode() {
   return mode;
 }
 
+function toError(error) {
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 function readNavigationModeInfoState() {
   try {
     return { info: getAndroidNavigationModeInfo(), error: null };
   } catch (error) {
-    return { info: null, error: error instanceof Error ? error : new Error(String(error)) };
+    return { info: null, error: toError(error) };
   }
 }
 
@@ -162,6 +174,135 @@ export function useAndroidNavigationModeInfo() {
     refresh();
 
     return () => subscription.remove();
+  }, []);
+
+  return state;
+}
+
+function toInsetEdge(value) {
+  return typeof value === 'number' && value > 0 ? value : 0;
+}
+
+function normalizeInsets(payload) {
+  if (!payload) {
+    return null;
+  }
+
+  return {
+    top: toInsetEdge(payload.top),
+    right: toInsetEdge(payload.right),
+    bottom: toInsetEdge(payload.bottom),
+    left: toInsetEdge(payload.left)
+  };
+}
+
+function isSameInsets(previous, next) {
+  if (!previous || !next) {
+    return previous === next;
+  }
+
+  return (
+    previous.top === next.top && previous.right === next.right && previous.bottom === next.bottom && previous.left === next.left
+  );
+}
+
+/**
+ * Reads the visible navigation bar insets of the current window, in dp, on each edge.
+ *
+ * Resolves `{ top: 0, right: 0, bottom: 0, left: 0 }` while the bar is hidden, and `null` when no window
+ * insets are available yet (no activity or window) or outside Android. Excludes status bar, keyboard,
+ * and system gesture insets. Rejects when the native module is not linked or predates this method.
+ */
+export async function getAndroidNavigationBarInsets() {
+  if (Platform.OS !== 'android') {
+    return null;
+  }
+
+  const nativeModule = getNativeModuleWithMethod('getNavigationBarInsets');
+  return normalizeInsets(await nativeModule.getNavigationBarInsets());
+}
+
+/**
+ * Resolves the thickness of the navigation bar: the largest edge of {@link getAndroidNavigationBarInsets}.
+ * In landscape the bar can sit on a side edge, so this is not necessarily a bottom padding.
+ * Resolves `null` when the insets are unavailable.
+ */
+export async function getAndroidNavigationBarHeight() {
+  const insets = await getAndroidNavigationBarInsets();
+  return insets ? Math.max(insets.top, insets.right, insets.bottom, insets.left) : null;
+}
+
+const INITIAL_INSETS_STATE = { insets: null, error: null };
+
+/**
+ * React hook for {@link getAndroidNavigationBarInsets}. Starts as `{ insets: null, error: null }`, reads after
+ * mount, and updates when the insets change (bar shown or hidden, rotation, activity change) and when the app
+ * becomes active. Results of reads superseded by a newer read or event are ignored.
+ *
+ * Errors are returned as `{ insets: null, error }` instead of being thrown.
+ */
+export function useAndroidNavigationBarInsets() {
+  const [state, setState] = useState(INITIAL_INSETS_STATE);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return undefined;
+    }
+
+    let mounted = true;
+    let latestReadId = 0;
+    // Only this effect updates the state, so it can skip updates that would not change the result.
+    let current = INITIAL_INSETS_STATE;
+
+    const apply = (next) => {
+      if (!current.error && !next.error && isSameInsets(current.insets, next.insets)) {
+        return;
+      }
+      current = next;
+      setState(next);
+    };
+
+    let insetsSubscription;
+    try {
+      const emitter = new NativeEventEmitter(getNativeModuleWithMethod('addListener'));
+      insetsSubscription = emitter.addListener(INSETS_EVENT, (payload) => {
+        latestReadId += 1;
+        apply({ insets: normalizeInsets(payload), error: null });
+      });
+    } catch (error) {
+      apply({ insets: null, error: toError(error) });
+      return undefined;
+    }
+
+    const read = () => {
+      latestReadId += 1;
+      const readId = latestReadId;
+      getAndroidNavigationBarInsets().then(
+        (insets) => {
+          if (mounted && readId === latestReadId) {
+            apply({ insets, error: null });
+          }
+        },
+        (error) => {
+          if (mounted && readId === latestReadId) {
+            apply({ insets: null, error: toError(error) });
+          }
+        }
+      );
+    };
+
+    const appStateSubscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        read();
+      }
+    });
+    read();
+
+    return () => {
+      mounted = false;
+      insetsSubscription.remove();
+      appStateSubscription.remove();
+    };
   }, []);
 
   return state;
