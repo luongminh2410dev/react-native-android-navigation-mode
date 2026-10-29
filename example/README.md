@@ -59,4 +59,20 @@ cd example/rn-0.88/android
 2. Open the app and read the result: `adb logcat -s ReactNativeJS | grep NavigationModeExample`.
 3. Change the navigation style in Settings › System › Gestures › System navigation (on an emulator, `adb shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.gestural` or `.threebutton`), return to the app, and read the log again.
 
+### Window insets checks (`rn-0.88`)
+
+The `rn-0.88` activity accepts fixture-only extras:
+
+```bash
+# App-owned insets listener: logs what the host app receives (tag NavigationModeExample)
+adb shell am start -n com.navmodern088/.MainActivity --ez hostInsetsListener true
+# Hide / show the navigation bar
+adb shell am start -n com.navmodern088/.MainActivity --ez immersive true
+adb shell am start -n com.navmodern088/.MainActivity --ez immersive false
+# Render a text input; tap it to open the keyboard
+adb shell am start -a android.intent.action.VIEW -n com.navmodern088/.MainActivity -d "navmode-example://keyboard"
+```
+
+Read the library result with `adb logcat -s ReactNativeJS | grep NavigationModeExample` and the host listener with `adb logcat -s NavigationModeExample`. On an AVD with `hw.keyboard=yes`, enable `adb shell settings put secure show_ime_with_hard_keyboard 1` so the soft keyboard appears.
+
 Emulators only cover AOSP behavior. OEM navigation implementations need real devices.

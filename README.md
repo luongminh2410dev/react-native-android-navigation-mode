@@ -203,13 +203,31 @@ Starts as `{ insets: null, error: null }`, reads after mount, and updates when t
 | 8.1 and earlier | Same sources; otherwise `3-button` |
 | iOS / other platforms | Legacy API `'gesture'`; detailed API `unknown` with `source: 'unsupported'`; insets `null` |
 
+```mermaid
+flowchart TD
+  A[getAndroidNavigationModeInfo] --> B{Android?}
+  B -- no --> U["unknown · unsupported"]
+  B -- yes --> R{"config_navBarInteractionMode<br/>is 0, 1 or 2?"}
+  R -- yes --> RS["mode · resource"]
+  R -- no --> S{"navigation_mode setting<br/>is 0, 1 or 2?"}
+  S -- yes --> SS["mode · secure-settings"]
+  S -- no --> V{Android version}
+  V -- "10+" --> UN["unknown · unavailable"]
+  V -- "9" --> P{"swipe_up_to_switch_apps_enabled<br/>is 0 or 1?"}
+  P -- yes --> PS["3-button / 2-button · swipe-up-setting"]
+  P -- no --> D["3-button · sdk-default"]
+  V -- "8.1 and earlier" --> D
+```
+
+The legacy `getAndroidNavigationMode()` uses the same detection and reports every `unknown` on Android as `'3-button'`.
+
 Detection relies on values the system exposes. Some OEM builds use their own navigation implementations that these values do not reflect, so treat the result as the system's reported mode rather than a guarantee. If a device reports a wrong mode, please open an issue with the output of `getAndroidNavigationModeInfo()`.
 
 ## Compatibility
 
 Peer requirements: React Native 0.71+, React 18+. The Android build uses Java/Kotlin target 17 (JDK 17).
 
-Verified on 2026-10-29 with the [example fixtures](example/README.md): release build, then on an Android 16 (API 36) emulator — gesture, 2-button, and 3-button detection, foreground refresh, and navigation bar insets in portrait and landscape.
+Verified on 2026-10-29 with the [example fixtures](example/README.md): release build, then on an Android 16 (API 36) emulator — gesture, 2-button, and 3-button detection, foreground refresh, and navigation bar insets in portrait and landscape. On React Native 0.88 the insets were also checked with the bar hidden (immersive), with the keyboard open (insets unchanged), and next to an app-owned insets listener (still receives every update).
 
 | React Native | Legacy Architecture | New Architecture |
 | --- | --- | --- |
@@ -220,7 +238,7 @@ Verified on 2026-10-29 with the [example fixtures](example/README.md): release b
 | 0.88.1 | Not available | Build and runtime verified, including with the TurboModule interop layer disabled |
 | Expo SDK 58 (0.88.1) | Not available | Build and runtime verified (development build path, `expo prebuild`) |
 
-Versions between the rows are expected to work but were not tested individually. Not yet verified on real devices or OEM navigation implementations, on Android 9 and earlier, or with the keyboard open and immersive mode.
+Versions between the rows are expected to work but were not tested individually. Not yet verified on real devices or OEM navigation implementations, or on Android 9 and earlier.
 
 ## Testing in your app (Jest)
 

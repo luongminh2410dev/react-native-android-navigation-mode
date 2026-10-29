@@ -1,6 +1,6 @@
 {
   "name": "react-native-android-navigation-mode",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Detect the Android navigation mode (gesture, 2-button, 3-button) synchronously and read navigation bar insets. TurboModule for the New Architecture, works on the Legacy Architecture and Expo dev builds.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
