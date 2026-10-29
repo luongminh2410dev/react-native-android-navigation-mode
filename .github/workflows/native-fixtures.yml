@@ -1,14 +1,18 @@
 name: Native fixtures
 
-# Manual only: builds an example fixture against the packed library and runs the Kotlin detector tests.
+# Manual only: builds a fixture against the packed library and runs the Kotlin unit tests.
 on:
   workflow_dispatch:
     inputs:
       fixture:
-        description: Fixture directory under example/
+        description: Committed fixture under example/, or "generated" to create one for react_native_version
         required: true
         type: choice
-        options: [rn-0.71, rn-0.76, rn-0.81, rn-0.82, rn-0.88]
+        options: [rn-0.88, rn-0.71, generated]
+      react_native_version:
+        description: React Native version (0.75+) for a generated fixture, e.g. 0.81.6
+        required: false
+        type: string
       new_architecture:
         description: newArchEnabled (ignored by React Native 0.82+, which always uses the New Architecture)
         required: true
@@ -28,13 +32,29 @@ jobs:
           distribution: zulu
           java-version: 17
       - run: npm ci
-      # Packs the library first: the fixture lockfile references the tarball, so `npm ci` cannot run before it exists.
-      - name: Install fixture dependencies and the packed library
-        run: example/scripts/install-library-into-fixtures.sh example/${{ inputs.fixture }}
+      - name: Prepare the fixture
+        id: fixture
+        # Inputs go through env, not `${{ }}` in the script, so they are never parsed as shell code.
+        env:
+          FIXTURE: ${{ inputs.fixture }}
+          RN_VERSION: ${{ inputs.react_native_version }}
+        run: |
+          if [ "$FIXTURE" = "generated" ]; then
+            if [ -z "$RN_VERSION" ]; then
+              echo "react_native_version is required for a generated fixture" >&2
+              exit 1
+            fi
+            example/scripts/create-fixture.sh "$RN_VERSION"
+            echo "dir=example/generated-rn-$RN_VERSION" >> "$GITHUB_OUTPUT"
+          else
+            # Packs the library first: the fixture lockfile references the tarball, so `npm ci` cannot run before it exists.
+            example/scripts/install-library-into-fixtures.sh "example/$FIXTURE"
+            echo "dir=example/$FIXTURE" >> "$GITHUB_OUTPUT"
+          fi
       # Kotlin tests are not in the tarball, so they build the library from the repository sources.
       - name: Kotlin unit tests
-        working-directory: example/${{ inputs.fixture }}/android
+        working-directory: ${{ steps.fixture.outputs.dir }}/android
         run: ./gradlew --no-daemon -PuseLibrarySource=true :react-native-android-navigation-mode:testDebugUnitTest
       - name: Build against the packed library
-        working-directory: example/${{ inputs.fixture }}/android
+        working-directory: ${{ steps.fixture.outputs.dir }}/android
         run: ./gradlew --no-daemon -PnewArchEnabled=${{ inputs.new_architecture }} assembleRelease

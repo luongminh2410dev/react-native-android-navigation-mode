@@ -97,7 +97,7 @@ export default function NavigationModeScreen() {
         <Row label="useAndroidNavigationBarInsets()" value={snapshot.insetsHook} />
         <Row label="getAndroidNavigationBarHeight()" value={height} />
         <Row label="Architecture" value={architecture} />
-        {scenario === 'keyboard' ? <TextInput autoFocus style={styles.input} placeholder="Keyboard check" /> : null}
+        {scenario === 'keyboard' ? <TextInput style={styles.input} placeholder="Keyboard check" /> : null}
       </ScrollView>
     </SafeAreaView>
   );
