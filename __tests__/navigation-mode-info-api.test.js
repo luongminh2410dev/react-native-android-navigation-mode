@@ -197,10 +197,50 @@ describe('public exports', () => {
 
     expect(Object.keys(library).sort()).toEqual([
       'NAVIGATION_MODE',
+      'getAndroidNavigationBarHeight',
+      'getAndroidNavigationBarInsets',
       'getAndroidNavigationMode',
       'getAndroidNavigationModeInfo',
+      'useAndroidNavigationBarInsets',
       'useAndroidNavigationMode',
       'useAndroidNavigationModeInfo'
     ]);
+  });
+});
+
+describe('native module resolution', () => {
+  it('resolves the module through TurboModuleRegistry by its native name on Android', () => {
+    const loaded = loadLibraryWithMockedReactNative({ nativeModule: nativeModuleWithInfo(UNAVAILABLE) });
+
+    loaded.library.getAndroidNavigationModeInfo();
+    loaded.library.getAndroidNavigationMode();
+
+    expect(loaded.TurboModuleRegistry.get).toHaveBeenCalledWith('AndroidNavigationMode');
+  });
+
+  it('does not load the Codegen spec on import or outside Android', () => {
+    const loaded = loadLibraryWithMockedReactNative({ os: 'ios', nativeModule: nativeModuleWithInfo(UNAVAILABLE) });
+
+    loaded.library.getAndroidNavigationMode();
+    loaded.library.getAndroidNavigationModeInfo();
+
+    expect(loaded.TurboModuleRegistry.get).not.toHaveBeenCalled();
+  });
+
+  it('calls native methods on the module object', () => {
+    const nativeModule = {
+      getNavigationMode() {
+        return this === nativeModule ? 'gesture' : 'detached';
+      },
+      getNavigationModeInfo() {
+        return this === nativeModule
+          ? { mode: 'gesture', interactionMode: 2, source: 'resource' }
+          : { mode: 'detached', interactionMode: null, source: 'resource' };
+      }
+    };
+    const { library } = loadLibraryWithMockedReactNative({ nativeModule });
+
+    expect(library.getAndroidNavigationMode()).toBe('gesture');
+    expect(library.getAndroidNavigationModeInfo().mode).toBe('gesture');
   });
 });

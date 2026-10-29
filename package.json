@@ -1,7 +1,7 @@
 {
   "name": "react-native-android-navigation-mode",
   "version": "1.0.1",
-  "description": "React Native Android module to detect navigation mode: gesture, 2-button, or 3-button.",
+  "description": "Detect the Android navigation mode (gesture, 2-button, 3-button) synchronously and read navigation bar insets. TurboModule for the New Architecture, works on the Legacy Architecture and Expo dev builds.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "files": [
@@ -20,10 +20,18 @@
   "expo": {
     "plugin": "./app.plugin.js"
   },
+  "codegenConfig": {
+    "name": "RNAndroidNavigationModeSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.reactnativeandroidnavigationmode"
+    }
+  },
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.codegen-spec.json"
   },
   "jest": {
     "testEnvironment": "node",
@@ -37,8 +45,14 @@
   "keywords": [
     "react-native",
     "android",
+    "navigation-mode",
     "navigation-bar",
-    "gesture",
+    "navigation-bar-height",
+    "gesture-navigation",
+    "window-insets",
+    "edge-to-edge",
+    "turbo-module",
+    "new-architecture",
     "native-module",
     "expo",
     "expo-plugin"
@@ -56,12 +70,14 @@
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
     "@eslint/js": "^9.39.5",
     "babel-jest": "^29.7.0",
     "eslint": "^9.39.5",
     "globals": "^17.13.0",
     "jest": "^29.7.0",
     "react": "^18.3.1",
+    "react-native": "^0.88.1",
     "react-test-renderer": "^18.3.1",
     "typescript": "^7.0.2"
   }

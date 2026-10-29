@@ -45,3 +45,27 @@ export declare function useAndroidNavigationModeInfo(): {
   info: AndroidNavigationModeInfo | null;
   error: Error | null;
 };
+
+/** Visible navigation bar insets of the current window, in dp. Every edge is `0` while the bar is hidden. */
+export type AndroidNavigationBarInsets = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
+
+/**
+ * Resolves `null` when the window has no insets yet (no activity or window) or outside Android.
+ * Excludes status bar, keyboard, and system gesture insets.
+ * Rejects when the native module is not linked or the installed native code predates this method.
+ */
+export declare function getAndroidNavigationBarInsets(): Promise<AndroidNavigationBarInsets | null>;
+
+/** Thickness of the navigation bar: the largest edge of {@link getAndroidNavigationBarInsets}. Not a bottom padding in landscape. */
+export declare function getAndroidNavigationBarHeight(): Promise<number | null>;
+
+/** Starts as `{ insets: null, error: null }`, then updates after mount and on every inset change. */
+export declare function useAndroidNavigationBarInsets(): {
+  insets: AndroidNavigationBarInsets | null;
+  error: Error | null;
+};

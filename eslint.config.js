@@ -9,7 +9,9 @@ module.exports = [
   {
     files: ['src/**/*.js'],
     languageOptions: {
-      sourceType: 'module'
+      sourceType: 'module',
+      // Metro supports CommonJS `require` inside ES modules; used to load the Codegen spec lazily.
+      globals: { require: 'readonly' }
     }
   },
   {
