@@ -40,4 +40,4 @@ Keep the public API in `src/index.js`, `src/index.d.ts`, and `README.md` in sync
    git push origin v1.1.0
    ```
 
-The [Release workflow](.github/workflows/release.yml) checks that the tag matches `package.json` and is on `main`, runs the tests, and publishes to npm with provenance. Versions with a prerelease suffix (`1.2.0-beta.1`) go to the `next` dist-tag; others go to `latest`. The repository needs an `NPM_TOKEN` secret holding an npm automation token.
+The [Release workflow](.github/workflows/release.yml) checks that the tag matches `package.json` and is on `main`, runs the tests, and publishes to npm with provenance. Versions with a prerelease suffix (`1.2.0-beta.1`) go to the `next` dist-tag; others go to `latest`. Publishing uses npm Trusted Publishing: the package's npm settings list this repository's `release.yml` as a trusted publisher, so no npm token is stored in GitHub.

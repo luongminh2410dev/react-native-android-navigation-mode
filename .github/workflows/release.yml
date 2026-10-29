@@ -1,7 +1,7 @@
 name: Release
 
 # Publishes to npm when a version tag (vX.Y.Z or vX.Y.Z-pre) is pushed.
-# Requires the repository secret NPM_TOKEN (npm automation token with publish access).
+# Uses npm Trusted Publishing (OIDC): the package's npm settings trust this repository's release.yml, so no token is stored.
 on:
   push:
     tags:
@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write # npm Trusted Publishing and provenance
 
 concurrency:
   group: release
@@ -37,14 +37,14 @@ jobs:
             echo "Tagged commit $GITHUB_SHA is not on main" >&2
             exit 1
           fi
+      # Trusted Publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@11
       - run: npm ci
       - run: npm test -- --runInBand
       - run: npm run lint
       - run: npm run typecheck
       - run: npm pack --dry-run --ignore-scripts
       - name: Publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="$(node -p "require('./package.json').version")"
           # Prerelease versions (with a hyphen) go to the `next` dist-tag so `latest` stays on stable releases.

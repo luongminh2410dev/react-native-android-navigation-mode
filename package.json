@@ -61,7 +61,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/luongminh2410dev/react-native-android-navigation-mode.git"
+    "url": "git+https://github.com/luongminh2410dev/react-native-android-navigation-mode.git"
   },
   "peerDependencies": {
     "react": ">=18",
