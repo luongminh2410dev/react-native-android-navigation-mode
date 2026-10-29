@@ -39,7 +39,7 @@ Do not install dependencies, download tools via `npx`, compile Kotlin or run Kot
 
 ## Release
 
-Only on user instruction: choose the semver bump from the public API impact, update `version` in `package.json`, run `npm pack --dry-run --ignore-scripts` to confirm the tarball contents, then publish. Never publish from a dirty tree or without stating the exact version.
+Only on user instruction: choose the semver bump from the public API impact, update `version` in `package.json` and the `CHANGELOG.md` heading, run `npm pack --dry-run --ignore-scripts` to confirm the tarball contents, and merge to `main`. Publishing is done by `.github/workflows/release.yml` when the tag `v<version>` is pushed for a commit on `main`; it re-runs the checks, verifies the tag matches `package.json`, and publishes with provenance (`latest`, or `next` for prerelease versions) using the `NPM_TOKEN` secret. Pushing the tag is the publish step: it needs the same explicit user instruction. Never tag a dirty tree or without stating the exact version.
 
 <!-- code-review-graph MCP tools -->
 ## MCP Tools: code-review-graph
