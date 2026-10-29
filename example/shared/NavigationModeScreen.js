@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   getAndroidNavigationBarHeight,
   getAndroidNavigationMode,
@@ -27,6 +27,15 @@ function architectureSnapshot() {
   };
 }
 
+// Launching with `-a android.intent.action.VIEW -d navmode-example://keyboard` renders a text input; tap it to open the keyboard.
+function useScenario() {
+  const [scenario, setScenario] = useState(null);
+  useEffect(() => {
+    Linking.getInitialURL().then((url) => setScenario(url ? url.replace('navmode-example://', '') : null));
+  }, []);
+  return scenario;
+}
+
 function Row({ label, value }) {
   return (
     <View style={styles.row}>
@@ -43,6 +52,7 @@ export default function NavigationModeScreen() {
   const infoGetter = readSafely(getAndroidNavigationModeInfo);
   const architecture = architectureSnapshot();
   const insetsHook = useAndroidNavigationBarInsets();
+  const scenario = useScenario();
   const [height, setHeight] = useState({ value: null, error: null });
 
   const insetsKey = JSON.stringify(insetsHook.insets);
@@ -64,7 +74,8 @@ export default function NavigationModeScreen() {
     infoGetter,
     insetsHook: { insets: insetsHook.insets, error: insetsHook.error ? insetsHook.error.message : null },
     height,
-    architecture
+    architecture,
+    scenario
   };
   const serialized = JSON.stringify(snapshot);
 
@@ -86,6 +97,7 @@ export default function NavigationModeScreen() {
         <Row label="useAndroidNavigationBarInsets()" value={snapshot.insetsHook} />
         <Row label="getAndroidNavigationBarHeight()" value={height} />
         <Row label="Architecture" value={architecture} />
+        {scenario === 'keyboard' ? <TextInput autoFocus style={styles.input} placeholder="Keyboard check" /> : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -98,5 +110,6 @@ const styles = StyleSheet.create({
   hint: { fontSize: 14, color: '#444444', marginBottom: 16 },
   row: { marginBottom: 12 },
   label: { fontSize: 13, fontWeight: '600', color: '#111111' },
-  value: { fontSize: 13, color: '#333333', fontFamily: 'monospace' }
+  value: { fontSize: 13, color: '#333333', fontFamily: 'monospace' },
+  input: { borderWidth: 1, borderColor: '#999999', padding: 8, marginTop: 8 }
 });
